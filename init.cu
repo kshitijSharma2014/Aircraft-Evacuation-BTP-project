@@ -19,7 +19,7 @@
 
   // Delta z value is 1 inch so each row has 30 inch of aile length in front of it
   //
-
+void printToFile(char filename[], int a[]);
   void pass_input(Passenger P[],int n);
 
   __device__ void get_Aisle_Range(int range[],int i, int N)
@@ -793,9 +793,11 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
       printf("\n");
     }
     count1=0;
-  	while(numout<numPass)
-  	{
-     // if(j==1000)
+int filecounter = 0;  	
+while(numout<numPass)
+  	 {
+++filecounter;
+     // ifiiii(j==1000)
       //  break;
       numprev=numout;
   		numout=0;
@@ -838,11 +840,24 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
     cudaMemcpy ( h_A , A , 1000*sizeof (block) , cudaMemcpyDeviceToHost);
 
 
+// creating file
+   FILE *fp;
+
+    char filename[] = "output";
+    char str[20];
+    sprintf(str, "%d", filecounter);
+    strcat(filename,str);
+    strcat(filename,".txt");
+
+
+//    printToFile(filename,h_A);
+//file creation complete
+
   		for(i=0;i<numPass;i++)
   		{
   			if(h_P[i].status == 4)
   				numout++;
-  	//	  prin tf("%d\n",h_P[i].status);
+  	//	 printf("%d\n",h_P[i].status);
       }
 
     if(numprev==numout)
@@ -860,25 +875,30 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
     //printf("%d %d\n",numout,j);
 
-      if(count1>100)
+     /* if(count1>100)
       {
         for(i=0;i<numPass;i++)
         {
           if(h_P[i].status!=4)
           {
-                printf("Passengr %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
+                printf("Passenger %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
           }
         }
         break;
       }
-
+*/
      // printf("%d\t %d\n",numout,j);
   		j++;
+    
+    printf("jjjj : %d\n", j);
   	}
 
   	float timeSteps = 40.6;
+	printf("%f\n",j);
   	printf("%f\n",j*timeSteps + 7000.0);
   //  printf("%f\n",j*timeSteps);
+    printf("timeSteps : %f\n",j);
+    printf("filecounter : %d\n", count1);
   	return 0;
   }
 
@@ -900,18 +920,21 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
         //
         tp->sex=random(0,1); // Male or female(random 0-1)
         tp->status = 0;
-        tp->Mtime=tp->sex?random(875,1750):random(920,1950);
+        tp->Mtime=tp->sex?random(1000,1750):random(1100,1950);
         tp->Wtime=50;
         tp->Rtime=random(400,700); // Random  (500-1000)ms
         tp->fear=-1; //fear value 0
         tp->agility=-1; // agility value
-        tp->diameter=6;//(Random ) // diameter occupied by passenger
+
+        tp->diameter=6;  //random(8,10);//(Random ) // diameter occupied by passenger
         tp->totaltime=0; //total time to evacuate
         tp->totalDist=0; //total distance to exit
-        if(tp->sex==0)
+        
+	if(tp->sex==0)
          tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
         else
           tp->speed=1.0f;
+
         tp->grpstatus=-1; // Not in this paper in group or not
         tp->timeSteps=178; // minimum unit of time = 178 miliseconds
         tp->res=0;
@@ -919,10 +942,51 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
       }
 
   }
+
+
+Aircraft aircraftInput(Aircraft A,char name[]){
+    char filename1[100];
+    strcat(filename1,".txt");
+
+
+   FILE *fp;
+   char buff[255];
+   int res[10];
+   int k =0;
+   fp = fopen(filename1, "r");
+   while(fgets(buff, 80, fp) != NULL)
+   {
+   //fscanf(fp, "%s", buff);
+   //printf("%s\n", buff );
+   int result = atoi(buff);
+   //printf("%d\n", result);
+    res[k] = result;
+    ++k;
+
+    }
+    fclose(fp);
+   // A.row = res[0];
+   // A.column = res[1];
+   // A.numOfExitPassage = res[2];
+   // A.maxNumPassenger = res[3];
+}
   int random(int min,int max)
   {
     int r = rand();
     r=r%(max-min+1);
     r=r+min;
     return r;
+  }
+  void printToFile(char filename[], int a[]){
+
+  FILE *fp;
+    fp = fopen(filename, "w");
+      for (int j = 0; j < 1000; ++j)
+      {
+        fprintf(fp, "%d", a[j]);
+	fprintf(fp, "\n");      
+	}
+
+    fclose(fp);
+
   }
