@@ -672,25 +672,31 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
     pass_input(h_P,numPass);
 
+
+    char aircraftName[30];
+    scanf("%s",aircraftName);
+    Aircraft A;
+    aircraftInput(A,aircraftName);
+
   	// Seating Arrangement Assigning Each Passenger location to sit randomely
   	// Think something to make sure the random function does not send it to infinite loop
 
-  	int h_seat[100][100];
+  	int h_seat[A->row][A->column];  // initialise exact array (compile with check bound)  check bound
   	int (*seat)[100];
 
-  	for(i=0;i<100;++i)
+  	for(i=0;i<A->row;++i)
   	{
-  		for(j=0;j<100;++j)
+  		for(j=0;j<A->column;++j)
   			h_seat[i][j]=-1;
   	}
 
   	//all seats are vacant right now
-
+//TODO start id with 1
   	int r_row,r_col;
   	for(i=0;i<numPass;++i)
   	{
-  		r_row=rand()%30;
-  		r_col=rand()%6;
+  		r_row=rand()%30;   //should be defined in the header file TODO
+  		r_col=rand()%6;     //should be defined in the header file TODO
   		if(h_seat[r_row][r_col]==-1)
   			{
   					h_P[i].x=r_row;
@@ -711,12 +717,12 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
 
   	}
-    for(i=0;i<30;++i)
-    {
-      for(j=0;j<10;++j)
-        printf("%d ",h_seat[i][j]+1);
-      printf("\n");
-    }
+   // for(i=0;i<30;++i)
+    //{
+     // for(j=0;j<10;++j)
+      //  printf("%d ",h_seat[i][j]+1);
+      //printf("\n");
+   // }
 
 
 
@@ -724,14 +730,14 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
   	// Each Passenger is sitting in a row and each row is having corresponding aisle array portion in front of it.
   	// The Passenger can move to the aisle A[] in front of its row if it is unoccupied
   printf("Seating Done\n");
-
-  	block h_A[1000];
+int aisleLength = ((A->row - 2) * 30 ) + 100);
+  	block h_A[aisleLength]; //length of aisle should be general
   	block* A;
 
 
   	// A is the aisle
   	//Each Element of the
-  	for(j=0;j<1000;++j)
+  	for(j=0;j<aisleLength;++j)
   		{
   				h_A[j].passid=-1;
   				h_A[j].exit=0;
@@ -774,7 +780,7 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
   	//__global__ void movement_to_exit(block A[],block B[4][55],block C[4][55],Passenger P[] ,int seat[][100],int numPass) //runs for each Passenger and make his movmenent according to the positions
   	int numout=0,numprev=0;
-  	j=0;
+  	j=0;  //change the variable name to some specific time var
     cudaMalloc((void **) &P , numPass*sizeof (Passenger) ) ;
     cudaMalloc((void **) &B , (55*4)*sizeof (block) ) ;
     cudaMalloc((void **) &C , (55*4)*sizeof (block) ) ;
@@ -793,8 +799,9 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
       printf("\n");
     }
     count1=0;
+    int filecounter = 0;
   	while(numout<numPass)
-  	{
+  	{ ++filecounter;
      // if(j==1000)
       //  break;
       numprev=numout;
@@ -836,13 +843,41 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
     cudaMemcpy ( h_C , C , 4*55*sizeof (block) , cudaMemcpyDeviceToHost);
     cudaMemcpy ( h_B , B , 4*55*sizeof (block) , cudaMemcpyDeviceToHost);
     cudaMemcpy ( h_A , A , 1000*sizeof (block) , cudaMemcpyDeviceToHost);
+// creating file
+   FILE *fp;
+
+    char filename[] = "output";
+    char str[100];
+    sprintf(str, "%d", filecounter);
+    strcat(filename,str);
+    strcat(filename,".txt");
+
+
+    fp = fopen(filename, "w");
+    int global[1000][150];
+    for (int i = 0; i <1000; ++i)
+    {
+      for (int j = 0; j < 150; ++j)
+      {
+        fprintf(fp, "%d", global[i][j]);
+      }
+      fprintf(fp, "\n", );
+    }
+
+    fprintf(fp, "This is testing...\n");
+
+
+
+    fclose(fp);
+
+//file creation complete
 
 
   		for(i=0;i<numPass;i++)
   		{
   			if(h_P[i].status == 4)
   				numout++;
-  	//	  prin tf("%d\n",h_P[i].status);
+  	//	  printf("%d\n",h_P[i].status);
       }
 
     if(numprev==numout)
@@ -869,7 +904,7 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
                 printf("Passengr %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
           }
         }
-        break;
+      //  break;
       }
 
      // printf("%d\t %d\n",numout,j);
@@ -905,13 +940,18 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
         tp->Rtime=random(400,700); // Random  (500-1000)ms
         tp->fear=-1; //fear value 0
         tp->agility=-1; // agility value
-        tp->diameter=6;//(Random ) // diameter occupied by passenger
+
+        tp->diameter=random(9,15);//(Random ) // diameter occupied by passenger
         tp->totaltime=0; //total time to evacuate
         tp->totalDist=0; //total distance to exit
-        if(tp->sex==0)
-         tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
-        else
-          tp->speed=1.0f;
+        if(tp->sex==0){
+          float t = (float)random(10,15);
+         tp->speed=t/10;  //Random (1-1.5 ) speed of passenger
+        }
+        else{
+          float t = (float)random(9,12);
+          tp->speed=t/10;
+        }
         tp->grpstatus=-1; // Not in this paper in group or not
         tp->timeSteps=178; // minimum unit of time = 178 miliseconds
         tp->res=0;
@@ -919,6 +959,263 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
       }
 
   }
+
+  Aircraft aircraftInput(Aircraft *A,char name[]){
+    char filename1[100];
+    strcat(filename1,".txt");
+
+
+   FILE *fp;
+   char buff[255];
+   int res[10];
+   int k =0;
+   fp = fopen(filename1, "r");
+   while(fgets(buff, 80, fp) != NULL)
+   {
+   //fscanf(fp, "%s", buff);
+   //printf("%s\n", buff );
+   int result = atoi(buff);
+   //printf("%d\n", result);
+    res[k] = result;
+    ++k;
+
+}
+    fclose(fp);
+    A->row = res[0];
+    A->column = res[1];
+    A->numOfExitPassage = res[2];
+    A->maxNumPassenger = res[3];
+}
+
+void createGlobalMatrix(int global[1000][150], block h_seat, block h_A, block h_B, block h_C){
+
+    //main exit 1
+    int k =0, i=0;
+    for(k =0;k<50;++k){
+      for (i = 0; i < 55; ++i)
+      {
+          if(h_B[0][i].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+        }
+        int temp = i;
+        if(h_A[k].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+
+      for (i = 54; i >=0; --i)
+      {
+          if(h_B[1][i].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+        }
+      }
+
+      // 1-14 seats
+      int p = 0;
+      for (i = 50; i < (14*30)+50; ++i)
+      {
+          int u=0;
+        for (int j = 0; j < 3; ++j)
+        {
+          if (h_seat[p][j] == -1)
+          {
+            for (; u < 18*(j+1); ++u)
+            {
+              global[i][u] = 0;
+            }
+          }
+          else{
+              for (; u < 18*(j+1); ++u)
+              {
+                global[i][u] = 1;
+              }
+          }
+        }
+        global[i][u] = h_A[i];
+
+        int u=0;
+        for (int j = 3; j < 6; ++j)
+        {
+
+          if (h_seat[p][j] == -1)
+          {
+            for (; u < 18*(j+1); ++u)
+            {
+              global[i][u] = 0;
+            }
+          }
+          else{
+              for (; u < 18*(j+1); ++u)
+              {
+                global[i][u] = 1;
+              }
+          }
+        }
+        if ((i+1-50)%30 == 0)
+        {
+          ++p;
+        }
+      }
+
+
+      //middle exits
+
+      for(k =i;k<i+50;++k){
+      int i =0;
+      for (j = 0; j < 55; ++j)
+      {
+          if(h_C[0][j].passid == -1){
+            global[k][j] = 0;
+          }
+          else{
+            global[k][j] = 1;
+          }
+        }
+        int temp = i;
+        if(h_A[k].passid == -1){
+            global[k][j] = 0;
+          }
+          else{
+            global[k][j] = 1;
+          }
+
+      for (j = 54; j >=0; --j)
+      {
+          if(h_C[1][j].passid == -1){
+            global[k][j+1] = 0;
+          }
+          else{
+            global[k][j+1] = 1;
+          }
+        }
+      }
+
+      // middle exits  correct the second loop for j.. j is not in the sync
+
+      for(;k<i+100;++k){
+      int i =0;
+      for (j = 0; j < 55; ++j)
+      {
+          if(h_C[2][j].passid == -1){
+            global[k][j] = 0;
+          }
+          else{
+            global[k][j] = 1;
+          }
+        }
+        int temp = i;
+        if(h_A[k].passid == -1){
+            global[k][j] = 0;
+          }
+          else{
+            global[k][j] = 1;
+          }
+
+      for (j = 54; j >=0; --j)
+      {
+          if(h_C[3][j].passid == -1){
+            global[k][j+1] = 0;
+          }
+          else{
+            global[k][j+1] = 1;
+          }
+        }
+      }
+
+
+      // 17 - 30 seats
+
+      for (i = k; i < (28*30)+150; ++i)
+      {
+          int u=0;
+        for (int j = 0; j < 3; ++j)
+        {
+          if (h_seat[p][j] == -1)
+          {
+            for (; u < 18*(j+1); ++u)
+            {
+              global[i][u] = 0;
+            }
+          }
+          else{
+              for (; u < 18*(j+1); ++u)
+              {
+                global[i][u] = 1;
+              }
+          }
+        }
+        global[i][u] = h_A[i];
+
+        int u=0;
+        for (int j = 3; j < 6; ++j)
+        {
+
+          if (h_seat[p][j] == -1)
+          {
+            for (; u < 18*(j+1); ++u)
+            {
+              global[i][u] = 0;
+            }
+          }
+          else{
+              for (; u < 18*(j+1); ++u)
+              {
+                global[i][u] = 1;
+              }
+          }
+        }
+        if ((i+1-150)%30 == 0)
+        {
+          ++p;
+        }
+      }
+
+
+//end exits
+      int q = i+50;
+      for(k =i;k<q;++k){
+      int i =0;
+      for (i = 0; i < 55; ++i)
+      {
+          if(h_B[2][i].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+        }
+        int temp = i;
+        if(h_A[k].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+
+      for (i = 54; i >=0; --i)
+      {
+          if(h_B[3][i].passid == -1){
+            global[k][i] = 0;
+          }
+          else{
+            global[k][i] = 1;
+          }
+        }
+      }
+
+
+}
+
   int random(int min,int max)
   {
     int r = rand();
