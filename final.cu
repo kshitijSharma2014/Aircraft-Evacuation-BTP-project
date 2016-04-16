@@ -21,6 +21,7 @@
   //
 void printToFile(char filename[], int a[]);
   void pass_input(Passenger P[],int n);
+void setspeed(Passenger *tp);
 void createGlobalMatrix(int h_seat[100][100], block h_A[1000], block h_B[4][55], block h_C[4][55], char filename[50],float tt);
 Aircraft aircraftInput(char name[]);
   __device__ void get_Aisle_Range(int range[],int i, int N)
@@ -656,9 +657,50 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
 }
 
+//normal adjustment
+int seatArrangement1(Passenger *h_P, int h_seat[][100], int numPass){
+int r_row,r_col,i;
+    for(i=0;i<numPass;++i)
+    {
+      r_row=rand()%30;   //should be defined in the header file TODO
+      r_col=rand()%6;     //should be defined in the header file TODO
+      if(h_seat[r_row][r_col]==-1)
+        {
+            h_P[i].x=r_row;
+            h_P[i].y=r_col;
+            if(r_row<0||r_col<0)
+              {
+                printf("Olala\n");
+                return 0;
+              }
+            else
+              h_seat[r_row][r_col]=i;
+            printf("%d %d\n",r_row,r_col);
+        }
+      else
+      {
+          i--;
+        }
+    }
+	return 1;
+}
+/*
+//older people in the aisle and younger in the window side
+int seatArrangement2(Passenger *h_P, int h_seat[][100], int numPass){
 
+}
 
+//younger people in the ailse and older in the window side
+int seatArrangement3(Passenger *h_P, int h_seat[][100], int numPass){
 
+}
+
+//
+int seatArrangement4(Passenger *h_P, int h_seat[][100], int numPass){
+
+}
+
+*/
   //Main
   int main()
   {
@@ -686,51 +728,21 @@ printf("\n enter the number of passengers : ");
   	int (*seat)[100];
 
   	for(i=0;i<100;++i)
-  	{
-  		for(j=0;j<100;++j)
+  	{	for(j=0;j<100;++j)
   			h_seat[i][j]=-1;
   	}
 
-  	//all seats are vacant right now
-
-  	int r_row,r_col;
-  	for(i=0;i<numPass;++i)
-  	{
-  		r_row=rand()%30;
-  		r_col=rand()%6;
-  		if(h_seat[r_row][r_col]==-1)
-  			{
-  					h_P[i].x=r_row;
-  					h_P[i].y=r_col;
-  			    if(r_row<0||r_col<0)
-              {
-               // printf("Olala\n");
-                return 0;
-              }
-            else
-              h_seat[r_row][r_col]=i;
-           // printf("%d %d\n",r_row,r_col);
-        }
-  		else
-  		{
-  				i--;
-  			}
-
-
-  	}
-    for(i=0;i<30;++i)
-    {
-      for(j=0;j<10;++j)
-        printf("%d ",h_seat[i][j]+1);
-      printf("\n");
-    }
-
+  	
+	    int tt = seatArrangement1(h_P, h_seat, numPass);
+  	if(tt == 0){
+		return 0;
+	}
 
 
   	// Now each row is occupied by some Passengers
   	// Each Passenger is sitting in a row and each row is having corresponding aisle array portion in front of it.
   	// The Passenger can move to the aisle A[] in front of its row if it is unoccupied
-  printf("Seating Done\n");
+	printf("Seating Done\n");
 
   	block h_A[1040];
   	block* A;
@@ -946,11 +958,7 @@ fprintf(fp,"\n ----------------------------- \n");
 
     for(i=0;i<n;++i,tp++)
       {
-        //r=rand();
-        //  printf("%d\n",r);
         tp->id=i;
-        //  tp->x=
-        //
         tp->sex=random(0,1); // Male or female(random 0-1)
         tp->status = 0;
         tp->Mtime=tp->sex?random(1000,1750):random(1100,1950);
@@ -958,23 +966,48 @@ fprintf(fp,"\n ----------------------------- \n");
         tp->Rtime=random(400,700); // Random  (500-1000)ms
         tp->fear=-1; //fear value 0
         tp->agility=-1; // agility value
-
+	
+	//tp->age = random(20,70); 
         tp->diameter=7;  //random(8,10);//(Random ) // diameter occupied by passenger
         tp->totaltime=0; //total time to evacuate
         tp->totalDist=0; //total distance to exit
-        
+	
 	if(tp->sex==0)
-         tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
+        	tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
         else
-          tp->speed=1.0f;
+        	tp->speed=1.2f;
 
+//setspeed(tp);    //setting speed according to the age
         tp->grpstatus=-1; // Not in this paper in group or not
         tp->timeSteps=178; // minimum unit of time = 178 miliseconds
         tp->res=0;
-        printf("id : %d , sex : %d , Mtime : %d, Rtime : %d\n",tp->id,tp->sex,tp->Mtime,tp->Rtime);
-      }
-
+        // printf("id : %d , sex : %d , Mtime : %d, Rtime : %d\n",tp->id,tp->sex,tp->Mtime,tp->Rtime);
+     	printf("age: %d \n", tp->age); 
+     }
   }
+
+void setspeed(Passenger *tp){
+	if(tp->age > 20 && tp->age < 40){
+		if(tp->sex==0)
+         		tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
+        	else
+          		tp->speed=1.2f;
+	}
+
+	if(tp->age > 40 && tp->age < 50){
+                if(tp->sex==0)
+                        tp->speed=1.3f;  //Random (1-1.5 ) speed of passenger
+                else
+                        tp->speed=0.9f;
+        }
+	
+	if(tp->age > 50 && tp->age < 70){
+                if(tp->sex==0)
+                        tp->speed=1.0f;  //Random (1-1.5 ) speed of passenger
+                else
+                        tp->speed=0.7f;
+        }
+}
 
 
 Aircraft aircraftInput(char name[]){
