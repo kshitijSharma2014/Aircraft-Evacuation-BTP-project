@@ -657,7 +657,188 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 }
 
 
+//normal adjustment
+int seatArrangement1(Passenger *h_P, int h_seat[][100], int numPass){
+int r_row,r_col,i;
+    for(i=0;i<numPass;++i)
+    {
+      r_row=rand()%30;   //should be defined in the header file TODO
+      r_col=rand()%6;     //should be defined in the header file TODO
+      if(h_seat[r_row][r_col]==-1)
+        {
+            h_P[i].x=r_row;
+            h_P[i].y=r_col;
+            if(r_row<0||r_col<0)
+              {
+                printf("Olala\n");
+                return 0;
+              }
+            else
+              h_seat[r_row][r_col]=i;
+            printf("%d %d\n",r_row,r_col);
+        }
+      else
+      {
+          i--;
+        }
+    }
+	return 1;
+}
 
+//older people in the aisle and younger in the window side
+int seatArrangement2(Passenger *h_P, int h_seat[][100], int numPass){
+  int r_row,r_col,i = 0,j =0;
+      int oldPpl[100],youngPpl[100], k=0, l=0;
+      for (i = 0; i < numPass;++i)
+      {
+        if (h_P[i].age > 40)
+        {
+          oldPpl[k] = i;
+          ++k;
+        }
+        else{
+          youngPpl[l] = i;
+          ++l;
+        }
+      }
+      int m =0, n=0;
+      for (i = 0; i < 30; ++i)
+      {
+        for (j = 0; j < 6; ++j)
+        {
+          if (j%2 !=0 || j%3 == 0)
+          {
+            if(m<l)
+            {
+              h_P[youngPpl[m]].x = i;
+              h_P[youngPpl[m]].y = j;
+              h_seat[i][j] = youngPpl[m];
+              ++m;
+            }
+          }
+          else{
+            if(n<k)
+            {
+              h_P[oldPpl[n]].x = i;
+              h_P[oldPpl[n]].y = j;
+              h_seat[i][j] = oldPpl[n];
+              ++n;
+            }
+          }
+        }
+      }
+    }
+  return 1;
+}
+
+//younger people in the ailse and older in the window side
+int seatArrangement3(Passenger *h_P, int h_seat[][100], int numPass){
+int r_row,r_col,i = 0,j =0;
+      int oldPpl[100],youngPpl[100], k=0, l = 0;
+      for (i = 0; i < numPass;++i)
+      {
+        if (h_P[i].age > 40)
+        {
+          oldPpl[k] = i;
+          ++k;
+        }
+        else{
+          youngPpl[l] = i;
+          ++l;
+        }
+      }
+      int m = 0, n=0;
+      for (i = 0; i < 30; ++i)
+      {
+        for (j = 0; j < 6; ++j)
+        {
+          if (j%2 !=0 || j%3 == 0)
+          {
+            if(m<k)
+            {
+              h_P[oldPpl[m]].x = i;
+              h_P[oldPpl[m]].y = j;
+              h_seat[i][j] = oldPpl[m];
+              ++m;
+            }
+          }
+          else{
+            if(n<l)
+            h_P[youngPpl[n]].x = i;
+            h_P[youngPpl[n]].y = j;
+            h_seat[i][j] = youngPpl[n];
+            ++n;
+          }
+        }
+      }
+    }
+  return 1;
+}
+
+// women in one half and men in second half
+int seatArrangement4(Passenger *h_P, int h_seat[][100], int numPass){
+  int r_row,r_col,i = 0,j =0;
+      int women[100], men[100], k=0, l = 0;
+      for (i = 0; i < numPass;++i)
+      {
+        if (h_P[i].sex == 0)
+        {
+          women[k] = i;
+          ++k;
+        }
+        else{
+          men[l] = i;
+          ++l;
+        }
+      }
+
+    for(i=0;i<k;++i)
+    {
+      r_row=rand()%15;
+      r_col=rand()%6;
+      if(h_seat[r_row][r_col]==-1)
+        {
+            h_P[women[i]].x=r_row;
+            h_P[women[i]].y=r_col;
+            if(r_row<0||r_col<0)
+              {
+                printf("Olala\n");
+                return 0;
+              }
+            else
+              h_seat[r_row][r_col]=i;
+            //printf("%d %d\n",r_row,r_col);
+        }
+      else
+      {
+          i--;
+        }
+    }
+
+    for(i=0;i<l;++i)
+    {
+      r_row=(rand()%15) + 15;
+      r_col=rand()%6;
+      if(h_seat[r_row][r_col]==-1)
+        {
+            h_P[men[i]].x=r_row;
+            h_P[men[i]].y=r_col;
+            if(r_row<0||r_col<0)
+              {
+                printf("Olala\n");
+                return 0;
+              }
+            else
+              h_seat[r_row][r_col]=i;
+            //printf("%d %d\n",r_row,r_col);
+        }
+      else
+      {
+          i--;
+        }
+    }
+return 1;
+}
 
   //Main
   int main()
@@ -692,39 +873,19 @@ printf("\n enter the number of passengers : ");
   	}
 
   	//all seats are vacant right now
+	int tt = seatArrangement1(h_P, h_seat, numPass);
+  	if(tt == 0){
+		return 0;
+	}
 
-  	int r_row,r_col;
-  	for(i=0;i<numPass;++i)
-  	{
-  		r_row=rand()%30;
-  		r_col=rand()%6;
-  		if(h_seat[r_row][r_col]==-1)
-  			{
-  					h_P[i].x=r_row;
-  					h_P[i].y=r_col;
-  			    if(r_row<0||r_col<0)
-              {
-               // printf("Olala\n");
-                return 0;
-              }
-            else
-              h_seat[r_row][r_col]=i;
-           // printf("%d %d\n",r_row,r_col);
-        }
-  		else
-  		{
-  				i--;
-  			}
-
-
-  	}
+  /*
     for(i=0;i<30;++i)
     {
       for(j=0;j<10;++j)
         printf("%d ",h_seat[i][j]+1);
       printf("\n");
     }
-
+*/
 
 
   	// Now each row is occupied by some Passengers
