@@ -223,388 +223,295 @@ __device__ int select_exit(Passenger P, int exit[])
 
 
 
+    __global__ void movement_to_exit(block A[],block B[4][55],block C[4][55],Passenger P[] ,int seat[][100],int d_exit[],int numPass) //runs for each Passenger and make his movmenent according to the positions
+    {
+    // Now we have to map the thread id with the passennger id
 
-  __global__ void movement_to_exit(block A[],block B[4][55],block C[4][55],Passenger P[] ,int seat[][100],int d_exit[],int numPass) //runs for each Passenger and make his movmenent according to the positions
-  {
-  // Now we have to map the thread id with the passennger id
+    int i=threadIdx.x,k;
+    int range[2];
+    int j,count=0;
+    int tex,ex,dir;
+  //  int exit[]={1,1,0,0,1,1,0,0};
 
-  int i=threadIdx.x,k;
-  int range[2];
-  int j,count=0;
-  int tex,ex,dir;
-//  int exit[]={1,1,0,0,1,1,0,0};
+    if(i < numPass)
+    {
+     switch(P[i].status)
+     {
+      //printf("Hello\n" );
+     	case 0: //the Passenger is in his seat aisle (x=row  number y = (1-6)column in seat )
+        if(P[i].y == 2 || P[i].y==3)
+     		{
 
-  if(i < numPass)
-  {
-   switch(P[i].status)
-   {
-    //printf("Hello\n" );
-   	case 0: //the Passenger is in his seat aisle (x=row  number y = (1-6)column in seat )
-      if(P[i].y == 2 || P[i].y==3)
-   		{
+    			get_Aisle_Range(range, P[i].x , 30);
+    		//	range[0]=0;
+         // range[1]=50;
+          count=0;
+    			for(j=range[0];j<range[1];++j)
+    				{
+    					if(A[j].passid == -1)
+    					{
+    						count++;
+    						if(count >= P[i].diameter)
+    							break;
+    					}
+    					else
+    						count=0;
+    				}
 
-  			get_Aisle_Range(range, P[i].x , 30);
-  		//	range[0]=0;
-       // range[1]=50;
-        count=0;
-  			for(j=range[0];j<range[1];++j)
-  				{
-  					if(A[j].passid == -1)
-  					{
-  						count++;
-  						if(count >= P[i].diameter)
-  							break;
-  					}
-  					else
-  						count=0;
-  				}
+    				if(j<range[1]+1)
+    				{
 
-  				if(j<range[1]+1)
-  				{
+    					for(k=j;k>=j-P[i].diameter;--k)
+    						A[k].passid=i;
+    					seat[P[i].x][P[i].y]=-1;
+              P[i].x=k;
+    					P[i].y=j;
+    					P[i].status=1;
+              P[i].res=0;
+    				}
+        }
+     		else
+     			{
+     				if(P[i].y < 2)
+     				{
+     					if(seat[P[i].x][P[i].y+1]==-1)
+     						{
+     				     if(P[i].res==60)
+            			{
+                    P[i].y++;
+     							seat[P[i].x][P[i].y-1]=-1;
+     							seat[P[i].x][P[i].y] = i;//
+     						   P[i].res=0;
+                  }
+                  else
+                    P[i].res++;
+              }
 
-  					for(k=j;k>=j-P[i].diameter;--k)
-  						A[k].passid=i;
-  					seat[P[i].x][P[i].y]=-1;
-            P[i].x=k;
-  					P[i].y=j;
-  					P[i].status=1;
-            P[i].res=0;
-  				}
-      }
-   		else
-   			{
-   				if(P[i].y < 2)
-   				{
-   					if(seat[P[i].x][P[i].y+1]==-1)
-   						{
-   				     if(P[i].res==60)
-          			{
-                  P[i].y++;
-   							seat[P[i].x][P[i].y-1]=-1;
-   							seat[P[i].x][P[i].y] = i;//
-   						   P[i].res=0;
+     				}
+     				else
+     				{
+     					if(seat[P[i].x][P[i].y-1]==-1)
+     						{
+                  if(P[i].res==60)
+                  {
+     							  P[i].y--;
+     							  seat[P[i].x][P[i].y+1]=-1;
+     							  seat[P[i].x][P[i].y] = i;//
+     						   P[i].res=0;
+                  }
+                  else
+                    P[i].res++;
                 }
-                else
-                  P[i].res++;
-            }
 
-   				}
-   				else
-   				{
-   					if(seat[P[i].x][P[i].y-1]==-1)
-   						{
-                if(P[i].res==60)
+     				}
+     			}
+     	break;
+
+
+    //comment starts here:
+     	case 1:
+     		//	the Passenger is in aisle and here the  x value that tell the starting of the Passenger
+     		//  y   is the ending point of the Passenger
+     		//	Select the exit and try to move towards the aisle point of that exit
+
+        ex = select_exit(P[i], d_exit); // Create an exit array that contain 0 if the exit is not open and 1 if it is open
+     		dir= get_direction(P[i],A,ex);
+
+        P[i].ans=ex;
+        P[i].dir=dir;
+
+        if(dir == 1)
+     		{
+
+     			//move up
+     			if(A[P[i].x-1].passid == -1 || A[P[i].x-2].passid == -1 || A[P[i].x-3].passid == -1 || A[P[i].x-4].passid == -1)
+     			{
+     				if(P[i].speed!=0.0f)
+     				{
+              if(P[i].res==2)
+              {
+     					  P[i].x-=2*P[i].speed;
+     					  P[i].y-=2*P[i].speed;
+
+                for (int s = 0; s < 2*P[i].speed; ++s)
                 {
-   							  P[i].y--;
-   							  seat[P[i].x][P[i].y+1]=-1;
-   							  seat[P[i].x][P[i].y] = i;//
-   						   P[i].res=0;
+                  A[P[i].x + s].passid = i;
+                  A[P[i].y+1+s].passid = -1;
                 }
-                else
-                  P[i].res++;
-              }
 
-   				}
-   			}
-   	break;
-  //done till here ;D
-
-
-  //comment starts here:
-   	case 1:
-   		//	the Passenger is in aisle and here the  x value that tell the starting of the Passenger
-   		//  y   is the ending point of the Passenger
-   		//	Select the exit and try to move towards the aisle point of that exit
-
-      ex = select_exit(P[i], d_exit); // Create an exit array that contain 0 if the exit is not open and 1 if it is open
-   		dir= get_direction(P[i],A,ex);
-
-      P[i].ans=ex;
-      P[i].dir=dir;
-
-      if(dir == 1)
-   		{
-
-   			//move up
-   			if(A[P[i].x-2].passid == -1)
-   			{
-   				if(P[i].speed==1.0f)
-   				{
-            if(P[i].res==2)
-            {
-   					  P[i].x-=2;
-   					  P[i].y-=2;
-
-   					  A[P[i].x].passid  = i;
-   					  A[P[i].x+1].passid  = i;
-
-   					  A[P[i].y+1].passid  = -1;
-   					  A[P[i].y+2].passid  = -1;
-   				   P[i].res=0;
-           }
-           else
-            P[i].res++;
-          }
-   				else
-   				{
-   					if(P[i].speed==1.5f && A[P[i].x-3].passid == -1)
-   					{
-              if(P[i].res==2)
-              {
-     						 P[i].x-=3;
-     						 P[i].y-=3;
-
-     						A[P[i].x+1].passid  = i;
-     						A[P[i].x+2].passid  = i;
-     						A[P[i].x].passid  = i;
-
-     						A[P[i].y+1].passid  = -1;
-     						A[P[i].y+2].passid  = -1;
-     						A[P[i].y+3].passid  = -1;
-                P[i].res=0;
-              }
-              else
-                P[i].res++;
-   					  }
-              else
-                P[i].res=0;
-
-   				}
-    			}
-          else
-              P[i].res=0;
-    			//else dont move
-   		}
-   		else
-   		{
-   			if(dir==-1)
-   			{
-   				//move down
-   				if(A[P[i].y+2].passid == -1)
-   				{
-   					if(P[i].speed==1.0f)
-   					{
-              if(P[i].res==2)
-              {
-   						P[i].x+=2;
-   						P[i].y+=2;
-
-   						A[P[i].y].passid  = i;
-   						A[P[i].y-1].passid  = i;
-
-   						A[P[i].x-1].passid  = -1;
-   						A[P[i].x-2].passid  = -1;
-              P[i].res=0;
-   					  }
-              else
-                P[i].res++;
+     				   P[i].res=0;
+             }
+             else
+              P[i].res++;
             }
-   					else
-   					{
-   						if(A[P[i].y+3].passid == -1)
-   						{
+      			}
+            else
+                P[i].res=0;
+      			//else dont move
+     		}
+     		else
+     		{
+     			if(dir==-1)
+     			{
+     				//move down
+     				if(A[P[i].y+1].passid == -1 || A[P[i].y+2].passid == -1 || A[P[i].y+3].passid == -1 || A[P[i].y+4].passid == -1)
+     				{
+     					if(P[i].speed!=0.0f)
+     					{
                 if(P[i].res==2)
                 {
-   							  P[i].x+=3;
-     							P[i].y+=3;
 
-     							A[P[i].y].passid  = i;
-     							A[P[i].y-2].passid  = i;
-     							A[P[i].y-1].passid  = i;
 
-     							A[P[i].x-1].passid  = -1;
-     							A[P[i].x-2].passid  = -1;
-     							A[P[i].x-3].passid  = -1;
+                  P[i].x-=2*P[i].speed;
+                  P[i].y-=2*P[i].speed;
+
+                  for (int s = 0; s < 2*P[i].speed; ++s)
+                  {
+                    A[P[i].y - s].passid = i;
+                    //A[P[i].x+1].passid = i;
+
+                    A[P[i].x - 1 - s].passid = -1;
+                    //A[P[i].y+2].passid = -1;
+                  }
                   P[i].res=0;
-     						}
+     					  }
                 else
                   P[i].res++;
-                }
+              }
+      			}
               else
                 P[i].res=0;
 
-   				}
-    				}
-            else
+     			}
+     			else
+     			{
+            P[i].res=0;
+     				//stay and jump to B or C
+     				if(ex==0||ex==1||ex==6||ex==7)
+     				{
+     					//Going to B
+              tex=ex;
+     					if(ex==6||ex==7)
+     						tex=ex-5;
+
+              // Going to B[tex]
+
+     					for(j=50;B[tex][j].passid==-1&&j> 50-P[i].diameter ;--j);
+
+     					if(50 - j == P[i].diameter)
+     					{
+     						for(k=P[i].x;k<=P[i].y;++k)
+                  A[k].passid=-1;
+                P[i].x = tex;
+     						P[i].y = j;
+
+     					for(;j<=50;++j)
+     						B[tex][j].passid=i;
+              P[i].status=2;
+     				 }
+            }
+     				else
+     				{
               P[i].res=0;
+                tex=ex-2;
 
-   			}
-   			else
-   			{
-          P[i].res=0;
-   				//stay and jump to B or C
-   				if(ex==0||ex==1||ex==6||ex==7)
-   				{
-   					//Going to B
-            tex=ex;
-   					if(ex==6||ex==7)
-   						tex=ex-5;
+              // Going to C[tex]
 
-            // Going to B[tex]
+              for(j=50;C[tex][j].passid==-1&&j>50-P[i].diameter;--j);
 
-   					for(j=50;B[tex][j].passid==-1&&j> 50-P[i].diameter ;--j);
+              if(50 - j == P[i].diameter)
+              {
+                for(k=P[i].x;k<=P[i].y;++k)
+                  A[k].passid=-1;
+                P[i].x = tex;
+                P[i].y = j;
 
-   					if(50 - j == P[i].diameter)
-   					{
-   						for(k=P[i].x;k<=P[i].y;++k)
-                A[k].passid=-1;
-              P[i].x = tex;
-   						P[i].y = j;
+              for(;j<=50;++j)
+                C[tex][j].passid=i;
+              P[i].status=3;
+            }
+     				}
+     			}
 
-   					for(;j<=50;++j)
-   						B[tex][j].passid=i;
-            P[i].status=2;
-   				 }
-          }
-   				else
-   				{
-            P[i].res=0;
-              tex=ex-2;
+     		}
+     	break;
 
-            // Going to B[tex]
 
-            for(j=50;C[tex][j].passid==-1&&j>50-P[i].diameter;--j);
-
-            if(50 - j == P[i].diameter)
+      case 2: // the Passenger is in midle of the exit front and end exit aisles i.e seat exit y represent the position in the aisle and
+     		// x represent which aisle 1 / 2 / 3 / 4
+     		if(P[i].y <= 0 && P[i].speed != 0.0f &&  (P[i].y-1 <= 0 || P[i].y-2 <= 0 || P[i].y-3 <= 0 || P[i].y-4 <= 0))
+     		{
+     	    for(j=0;j<10; ++j)
             {
-              for(k=P[i].x;k<=P[i].y;++k)
-                A[k].passid=-1;
-              P[i].x = tex;
-              P[i].y = j;
-
-            for(;j<=50;++j)
-              C[tex][j].passid=i;
-            P[i].status=3;
+              if(B[P[i].x][j].passid ==i)
+                B[P[i].x][j].passid=-1;
           }
-   				}
-   			}
+          P[i].status = 4; //Passenger is out of the plane
+      	}
+     		else
+     		{
 
-   		}
-   	break;
+     			if(P[i].speed != 0.0f)
+     			{
+    				if(B[P[i].x][P[i].y-1].passid ==-1 || B[P[i].x][P[i].y-2].passid ==-1 || B[P[i].x][P[i].y-3].passid ==-1 || B[P[i].x][P[i].y-4].passid ==-1)
+    				{
+    	 				//move closer to the exit
 
+    					P[i].y-=2*P[i].speed;
 
-    case 2: // the Passenger is in midle of the exit front and end exit aisles i.e seat exit y represent the position in the aisle and
-   		// x represent which aisle 1 / 2 / 3 / 4
-   		if(P[i].y <= 0||(P[i].speed==1.0f && P[i].y-2 <= 0)||(P[i].speed==1.5f && P[i].y-3 <= 0) )
-   		{
-   	    for(j=0;j<10; ++j)
-          {
-            if(B[P[i].x][j].passid ==i)
-              B[P[i].x][j].passid=-1;
-        }
-        P[i].status = 4; //Passenger is out of the plane
-    	}
-   		else
-   		{
+              for (int s = 0; s < 2*P[i].speed; ++s)
+              {
+                B[P[i].x][P[i].y + s].passid = i;
+                B[P[i].x][(P[i].y + (int)P[i].diameter + 1 +s)].passid =-1;
+              }
+    	 			}
+    	 		}
+     		}
 
-   			if(P[i].speed == 1.0f)
-   			{
-  				if(B[P[i].x][P[i].y-2].passid ==-1)
-  				{
-  	 				//move closer to the exit
+     	break;
+     	case 3: // the Passenger is in middle of the middle exit aisles i.e seat exit y represent the position in the aisle and
+     		// x represent which aisle 1 / 2 / 3 / 4
+     	if(P[i].y <= 0 && P[i].speed != 0.0f && (P[i].y-1 <= 0 || P[i].y-2 <= 0 || P[i].y-3 <= 0 || P[i].y-4 <= 0))
+     		{
+     			for(j=0;j<10; ++j)
+     				{
+              if(C[P[i].x][j].passid ==i)
+                C[P[i].x][j].passid=-1;
+     			}
+          P[i].status = 4; //Passenger is out of the plane
+     		}
+     		else
+     		{
 
-  					P[i].y-=2;
-
-  	 				B[P[i].x][P[i].y].passid = i;
-  	 				B[P[i].x][P[i].y + 1].passid = i;
-
-  	 				B[P[i].x][(P[i].y + (int)P[i].diameter + 1)].passid =-1;
-  	 				B[P[i].x][(P[i].y + (int)P[i].diameter + 2)].passid =-1;
-
-  	 			}
-  	 		}
-  	 		else
-  	 		{
-  	 			if(B[P[i].x][P[i].y -3 ].passid ==-1)
-  	 			{
-  	 				//move closer to the exit
-  	 				P[i].y-=3;
-
-  	 				B[P[i].x][P[i].y].passid = i;
-  	 				B[P[i].x][P[i].y + 2].passid = i;
-  	 				B[P[i].x][P[i].y + 1].passid = i;
-
-  	 				B[P[i].x][P[i].y + (int)P[i].diameter + 1].passid =-1;
-  	 				B[P[i].x][P[i].y + (int)P[i].diameter + 2].passid =-1;
-  	 				B[P[i].x][P[i].y + (int)P[i].diameter + 3].passid =-1;
-
-
-  	 			}
-  	 		}
-   		}
-
-   	break;
-   	case 3: // the Passenger is in midle of the midle exit aisles i.e seat exit y represent the position in the aisle and
-   		// x represent which aisle 1 / 2 / 3 / 4
-   	if(P[i].y <= 0||(P[i].speed==1.0f && P[i].y-2 <= 0)||(P[i].speed==1.5f && P[i].y-3 <= 0) )
-   		{
-   			for(j=0;j<10; ++j)
-   				{
-            if(C[P[i].x][j].passid ==i)
-              C[P[i].x][j].passid=-1;
-   			}
-        P[i].status = 4; //Passenger is out of the plane
-   		}
-   		else
-   		{
-
-   			if(P[i].speed == 1.0f)
-   			{
-  				if(C[P[i].x][P[i].y-2].passid ==-1)
-  				{
-  	 				//move closer to the exit
-  	 			 if(P[i].res==1)
-           {
-          	P[i].y-=2;
-  	 				C[P[i].x][P[i].y ].passid = i;
-  	 				C[P[i].x][P[i].y + 1].passid = i;
-
-
-  	 				C[P[i].x][P[i].y + (int)P[i].diameter + 1].passid =-1;
-  	 				C[P[i].x][P[i].y + (int)P[i].diameter + 2].passid =-1;
-          }
-          else
-            P[i].res++;
-  	 			}
-          else
-            P[i].res=0;
-  	 		}
-  	 		else
-  	 		{
-  	 			if(P[i].speed == 1.5f&&C[P[i].x][P[i].y -3].passid ==-1)
-  	 			{
-  	 				//move closer to the exit
-            if(P[i].res==1)
-            {
-  	 				P[i].y-=3;
-
-  	 				C[P[i].x][P[i].y ].passid = i;
-  	 				C[P[i].x][P[i].y + 2].passid = i;
-  	 				C[P[i].x][P[i].y + 1].passid = i;
-
-
-  					C[P[i].x][P[i].y + (int)P[i].diameter + 1].passid =-1;
-  	 				C[P[i].x][P[i].y + (int)P[i].diameter + 2].passid =-1;
-  	 				C[P[i].x][P[i].y + (int)P[i].diameter + 3].passid =-1;
+     			if(P[i].speed != 0.0f)
+     			{
+    				if(C[P[i].x][P[i].y-1].passid ==-1 || C[P[i].x][P[i].y-2].passid ==-1 || C[P[i].x][P[i].y-3].passid ==-1 || C[P[i].x][P[i].y-4].passid ==-1)
+    				{
+    	 				//move closer to the exit
+    	 			 if(P[i].res==1)
+             {
+            	P[i].y-=2*P[i].speed;
+              for (int s = 0; s < 2*P[i].speed; ++s)
+              {
+                C[P[i].x][P[i].y + s].passid = i;
+                C[P[i].x][(P[i].y + (int)P[i].diameter + 1 +s)].passid =-1;
+              }
             }
             else
               P[i].res++;
-  	 			}
-          else
-            P[i].res=0;
-  	 		}
-   		}
+    	 			}
+            else
+              P[i].res=0;
+    	 		}
+     		}
 
-   	break;
-    case 4:
-      P[i].x=-1;
-      P[i].y=-1;
-   };
-
-  }
-
-  }
-
+     	break;
+      case 4:
+        P[i].x=-1;
+        P[i].y=-1;
+     };
+    }
+    }
 
 
 
