@@ -1136,7 +1136,7 @@ int main()
   
   
   int tt = seatArrangement4(h_P, h_seat, numPass);
-  if(tt == 1){
+  if(tt == 0){
     return 0;
   }
   
@@ -1333,18 +1333,18 @@ int main()
     
     //printf("%d %d\n",numout,j);
     
-    // if(count1>100)
-    //{
-    //printf("----------%d --------------\n", j);
-    //for(i=0;i<numPass;i++)
-    //{
-    //  if(h_P[i].status!=4)
-    //{
-    // printf("Passenger %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
-    //}
-    //}
-    // break;
-    //}
+    if(count1>100)
+    {
+    printf("----------%d --------------\n", j);
+    for(i=0;i<numPass;i++)
+    {
+      if(h_P[i].status!=4)
+    {
+    printf("Passenger %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
+    }
+    }
+     break;
+    }
     
     // printf("%d\t %d\n",numout,j);
     j++;
