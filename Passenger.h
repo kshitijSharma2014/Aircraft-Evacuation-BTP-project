@@ -26,4 +26,7 @@
 	int ans;
 	int dir;
 	double timeSteps; // minimum unit of time = 178 miliseconds
+	double coordinateX;
+	double coordinateY;
+	int age;
 } Passenger;
