@@ -1072,6 +1072,7 @@ int seatArrangement4(Passenger *h_P, int h_seat[][100], int numPass){
 //Main
 int main()
 {
+  printf("in int main\n");
   srand(time((0)));
   Aircraft air;
   char name[10];
@@ -1082,8 +1083,10 @@ int main()
   int res[3];
   int k = 0;
   fp = fopen("input.dat", "r");
+  printf("fopen\n");
   while(fgets(buff, 20, fp) != NULL)
   {
+    printf("\n");
     //fscanf(fp, "%s", buff);
     //printf("%s\n", buf f );
     if (k==0)
@@ -1103,9 +1106,9 @@ int main()
     ++k;
   }
   fclose(fp);
-  //printf("name %s\n", name);
+  printf("name %s\n", name);
   air = aircraftInput(name);
-  // printf("details aircraft:::row row %d ",air.row);
+  printf("details aircraft:::row row %d ",air.row);
   int numPass,i,j;
   int count1=0;
   //printf("\n enter the number of passengers : ");
@@ -1119,7 +1122,7 @@ int main()
     h_exit[i] = res[2]%10;
     res[2] = res[2]/10;
   }
-  
+  printf("pasinput\n");
   
   pass_input(h_P,numPass);
   
@@ -1333,7 +1336,7 @@ int main()
     
     //printf("%d %d\n",numout,j);
     
-    if(count1>100)
+    if(count1==100)
     {
     printf("----------%d --------------\n", j);
     for(i=0;i<numPass;i++)
@@ -1343,9 +1346,24 @@ int main()
     printf("Passenger %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
     }
     }
+     //break;
+    }
+
+   
+    if(count1>150)
+    {
+    printf("----------%d 150--------------\n", j);
+    for(i=0;i<numPass;i++)
+    {
+      if(h_P[i].status!=4)
+    {
+    printf("Passenger %d : (%d,%d) : %d : ans : %d : dir : %d\n",i,h_P[i].x,h_P[i].y,h_P[i].status,h_P[i].ans,h_P[i].dir);
+    }
+    }
      break;
     }
-    
+
+
     // printf("%d\t %d\n",numout,j);
     j++;
     // printf("jjjj : %d\n", j);
