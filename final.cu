@@ -21,115 +21,164 @@
   //
 void printToFile(char filename[], int a[]);
   void pass_input(Passenger P[],int n);
+    int random(int min,int max);
 void createGlobalMatrix(int h_seat[100][100], block h_A[1000], block h_B[4][55], block h_C[4][55], char filename[50],float tt);
 Aircraft aircraftInput(char name[]);
   __device__ void get_Aisle_Range(int range[],int i, int N)
   {
-
-    if(i>=1 && i<=N/2 - 1)
-    {
-      range[0] = (i-1)*30;
-      range[1] = range[0] +30 - 1;
-    }
-    else if(i == N/2)
-    {
-      range[0] = (i-1)*30;
-      range[1] = range[0] + 50 -1;
-    }
-    else if(i == N/2 + 1)
-    {
-	range[0] = (i-2)*30 + 50;
-	range[1] = range[0] + 50 -1;
-    }
-    else if(i>N/2+1 && i<=N-1)
-    {
-      range[0] = (i-1)*30+40;
-      range[1] = range[0] +30 - 1;
-    }
-  //return range;
-  }
-
-
-
-
-
-/*
-  __device__ int select_exit(Passenger P, int exit[])
+if(i>=1 && i<=N/2 - 1)
   {
-      int ans =0;
-      if ((exit[0] == 1 || exit[1] == 1) && (exit[2]==1 || exit[3]==1 || exit[4]==1 || exit[5]==1) && P.x<=470){
-          if(P.x<470-P.x)
-          {
-              ans = (exit[0] == 1) ? 0:1;
-          }
-          else{
-              if(exit[2]==1 || exit[3]==1){
-                  ans = (exit[2] == 1) ? 2:3;
-              }
-              else if(exit[4]==1 || exit[5]==1){
-                  ans = (exit[4] == 1) ? 4:5;
-              }
-          }
-      }
-      else if ((exit[6] == 1 || exit[7] == 1) && (exit[2]==1 || exit[3]==1 || exit[4]==1 || exit[5]==1) && P.x>470){
-          if(940-P.x<P.x-470){
-              ans = (exit[6] == 1) ? 6:7;
-          }
-          else{
-              if(exit[4]==1 || exit[5]==1){
-                  ans = (exit[4] == 1) ? 4:5;
-              }
-              else if(exit[2]==1 || exit[3]==1){
-                  ans = (exit[2] == 1) ? 2:3;
-              }
-          }
-
-      }
-      return ans;
+    range[0] = (i-1)*30;
+    range[1] = range[0] +30 - 1;
   }
-
-*/
-__device__ int select_exit(Passenger P, int exit[])
+  else if(i == N/2)
   {
-      int i,ans =-1;
-      if(P.x<470)
-      {
-        if(P.x<470-P.x)
-        {
-          if(exit[0]==1||exit[1]==1)
-            ans=0;
-        }
-        else
-        {
-          if(exit[2]==1||exit[3]==1||exit[4]==1||exit[5]==1)
-            ans=3;
-        }
-      }
-      else
-      {
-        if(940-P.x<P.x-470)
-        {
-          if(exit[7]==1||exit[8]==1)
-            ans=7;
-        }
-        else
-        {
-          if(exit[2]==1||exit[3]==1||exit[4]==1||exit[5]==1)
-            ans=3;
-        }
-      }
-      if(ans==-1)
-      {
-        for(i=0;i<6;++i)
-          {
-            if(exit[i]==1)
-              return i;
-          }
-      }
-      else
-        return ans;
+    range[0] = (i-1)*30;
+    range[1] = range[0] + 50 -1;
   }
+  else if(i == N/2 + 1)
+  {
+    range[0] = (i-2)*30 + 50;
+    range[1] = range[0] + 50 -1;
+  }
+  else if(i>N/2+1 && i<=N-1)
+  {
+    range[0] = (i-1)*30+40;
+    range[1] = range[0] +30 - 1;
+  }
+  //return range;  
+}
 
+
+__device__ int select_exit(Passenger p[], int exit[], int numPass)
+{
+  for (int k = 0; k < numPass; ++k)
+  {
+    if (p[k].x<=7)
+    {
+      if (exit[0] == 1 && exit[1] != 1)
+      {
+        p[k].exit = 0;
+      }
+      else if (exit[1] == 1 && exit[0] != 1)
+      {
+        p[k].exit = 1;
+      }
+      else if (exit[1] == 1 && exit[0] == 1)
+      {
+        p[k].exit = randomfunc(0,1);
+      }
+      else{
+        for (int i = 2; i < 8; ++i)
+        {
+          if (exit[i] == 1)
+          {
+            p[k].exit = i;
+            break;
+          }
+        }
+      }
+    }
+    if (p[k].x>7 && p[k].x<=14)
+    {
+      if (exit[2] == 1 && exit[3] != 1)
+      {
+        p[k].exit = 2;
+      }
+      if (exit[3] == 1 && exit[2] != 1)
+      {
+        p[k].exit = 3;
+      }
+      else if (exit[2] == 1 && exit[3] == 1)
+      {
+        p[k].exit = randomfunc(2,3);
+      }
+      else if (exit[2] != 1 && exit[3] != 1)
+      {
+        for (int i = 0; i < 8; ++i)
+        {
+          if (exit[i] == 1)
+          {
+            p[k].exit = i;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (p[k].x>14 && p[k].x<=22)
+    {
+      if (exit[4] == 1 && exit[5] != 1)
+      {
+        p[k].exit = 4;
+      }
+      if (exit[5] == 1 && exit[4] != 1)
+      {
+        p[k].exit = 5;
+      }
+      else if (exit[4] == 1 && exit[5] == 1)
+      {
+        p[k].exit = randomfunc(4,5);
+      }
+      else if (exit[4] != 1 && exit[5] != 1)
+      {
+        int flag =0;
+        for (int i = 2; i < 8; ++i)
+        {
+          if (exit[i] == 1)
+          {
+            p[k].exit = i;
+            flag = 1;
+            break;
+          }
+        }
+        if (flag == 0)
+        {
+          if (exit[0] == 1 && exit[1] != 1)
+          {
+            p[k].exit = 0;
+          }
+          if (exit[1] == 1 && exit[0] != 1)
+          {
+            p[k].exit = 1;
+          }
+          else if (exit[1] == 1 && exit[0] == 1)
+          {
+            p[k].exit = randomfunc(0,1);
+          }
+        }
+      }
+    }
+    
+    if (p[k].x>22 && p[k].x<30)
+    {
+      if (exit[6] == 1 && exit[7] != 1)
+      {
+        p[k].exit = 6;
+      }
+      if (exit[7] == 1 && exit[6] != 1)
+      {
+        p[k].exit = 7;
+      }
+      else if (exit[6] == 1 && exit[7] == 1)
+      {
+        p[k].exit = randomfunc(6,7);
+      }
+      else if (exit[6] != 1 && exit[7] != 1)
+      {
+        for (int i = 5; i >=0; --i)
+        {
+          if (exit[i] == 1)
+          {
+            p[k].exit = i;
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+}
 
   __device__ int get_direction(Passenger p, block A[], int exitnum){
       if(exitnum == 0 || exitnum == 1){
@@ -175,55 +224,7 @@ __device__ int select_exit(Passenger P, int exit[])
       }
       return 0;
   }
- /*
-  __global__ void map_Passenger_to_exit(Passenger P[], int seat[100][100], block C[][55],int exit[]){
-
-    int k,j,m,i =2, rownm;
-
-    while(i<6 && exit[i]!=0){
-      if(i==2)
-      {
-          rownm = 15;
-          j=0;
-      }
-      if(i==3)
-      {
-          rownm = 15;
-          j=5;
-      }
-      if(i==4)
-      {
-          rownm = 16;
-          j=0;
-      }
-
-      if(i==5){
-          rownm = 16;
-          j=5;
-      }
-      for(k=0;k<35;){
-
-          for( m = k; m < k + (int)P[ seat[rownm][j] ].diameter ; ++m){
-              C[i-2][m].passid = seat[rownm][j];
-          }
-          seat[rownm][j] = 0;
-          //C[i-2][p[seat[rownm][j]].diameter-1].passid = -1*seat[rownm][j];
-          if(i==2 || i==4){
-              ++j;
-          }
-          else if(i==3 || i==5){
-              --j;
-          }
-          k=k+17;
-      }
-      ++i;
-    }
-  }
-*/
-
-
-
-
+ 
   __global__ void movement_to_exit(block A[],block B[4][55],block C[4][55],Passenger P[] ,int seat[][100],int d_exit[],int numPass) //runs for each Passenger and make his movmenent according to the positions
   {
   // Now we have to map the thread id with the passennger id
@@ -602,12 +603,7 @@ __device__ int select_exit(Passenger P, int exit[])
    };
 
   }
-
-  }
-
-
-
-
+}
 
 void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[][55],int h_exit[])
 {
@@ -656,188 +652,418 @@ void map_Passenger_to_exit(Passenger P[],int seat[][100], block C[][55],block B[
 
 }
 
+void passengerGraph(Passenger p[],int seat[][100], block A[], block B[][55],block C[][55], int numPass, int N){
+  
+  for (int i = 0; i < numPass; ++i)
+  {
+    if (p[i].status==0) //seat
+    {
+      //printf("%d,%d\n", p[i].x,p[i].y);
+      //printf("status 0\n");
+      p[i].coordinateX = p[i].x+1.0;
+      if (p[i].y >=3)
+      {
+        p[i].coordinateY = p[i].y + 2.0;
+      }
+      else{
+        p[i].coordinateY = p[i].y + 1.0;
+      }
+      
+    }
+    
+    if (p[i].status==1) //aisle
+    {
+      // printf("%d,%d\n", p[i].x,p[i].y);
+      
+      //printf("%d\n", p[i].exit);
+      //printf("in status 1 aisle\n");
+      if (p[i].x < (N/2)*30)
+      {
+        p[i].coordinateX = (float)p[i].x/(float)30 +0.0;
+        p[i].coordinateY = 4.0;
+      }
+      
+      if (p[i].x > (N/2+2)*30+40)
+      {
+        p[i].coordinateX = (float)(p[i].x-40)/(float)30 +0.0;
+        p[i].coordinateY = 4.0;
+      }
+      
+      if ((p[i].x > (N/2)*30) && (p[i].x < (N/2+2)*30+40))
+      {
+        p[i].coordinateX = ((float)(p[i].x - (N/2)*30.0))/50.0;
+        p[i].coordinateY = 4.0;
+      }
+      
+    }
+    
+    if (p[i].status==2) //exit aisle
+    {
+      //printf("%d,%d\n", p[i].x,p[i].y);
+      
+      //printf("%d\n", p[i].exit);
+      
+      //printf("status 2 in end exit aisle\n");
+      if (p[i].exit == 0 || p[i].exit == 1)
+      {
+        p[i].coordinateX = 0.0;
+      }
+      if (p[i].exit == 6 || p[i].exit == 7)
+      {
+        p[i].coordinateX = 31.0;
+      }
+      
+      if (p[i].exit == 0 || p[i].exit == 6)
+      {
+        p[i].coordinateY = 4.0 - (float)p[i].x/(float)17.0;
+      }
+      if (p[i].exit == 1 || p[i].exit == 7)
+      {
+        p[i].coordinateY = (float)p[i].x/(float)17.0 + 4.0;
+      }
+      
+      printf("%f, %f\n", p[i].coordinateX, p[i].coordinateY);
+      
+    }
+    if (p[i].status==3) //middle exit aisle
+    {
+      //  printf("%d,%d\n", p[i].x,p[i].y);
+      
+      //printf("in the middle exit aisle\n");
+      //printf("%d\n", p[i].exit);
+      if (p[i].exit == 2 || p[i].exit == 3)
+      {
+        //printf("in the x thing  \n \n");
+        p[i].coordinateX = 15.0;
+      }
+      if (p[i].exit == 4 || p[i].exit == 5)
+      {
+        p[i].coordinateX = 16.0;
+      }
+      
+      if (p[i].exit == 2 || p[i].exit == 4)
+      {
+        //printf("in y thing \n \n");
+        p[i].coordinateY = 4.0 - (float)p[i].x/(float)17.0;
+      }
+      if (p[i].exit == 3 || p[i].exit == 5)
+      {
+        //printf("in y thing \n \n");
+        p[i].coordinateY = (float)p[i].x/(float)17.0 + 4;
+      }
+      printf("middle exit %f, %f\n", p[i].coordinateX, p[i].coordinateY);
+    }
+    if (p[i].status==4)
+    {
+      // printf("%d,%d\n", p[i].x,p[i].y);
+      
+      // printf("%d\n", p[i].exit);
+      
+      p[i].coordinateX = -1;
+      p[i].coordinateY = -1;
+    }
+  }
+}
 
 //normal adjustment
 int seatArrangement1(Passenger *h_P, int h_seat[][100], int numPass){
-int r_row,r_col,i;
-    for(i=0;i<numPass;++i)
+  int r_row,r_col,i;
+  for(i=0;i<numPass;++i)
+  {
+    r_row=rand()%30;   //should be defined in the header file TODO
+    r_col=rand()%6;     //should be defined in the header file TODO
+    if(h_seat[r_row][r_col]==-1)
     {
-      r_row=rand()%30;   //should be defined in the header file TODO
-      r_col=rand()%6;     //should be defined in the header file TODO
-      if(h_seat[r_row][r_col]==-1)
-        {
-            h_P[i].x=r_row;
-            h_P[i].y=r_col;
-            if(r_row<0||r_col<0)
-              {
-                printf("Olala\n");
-                return 0;
-              }
-            else
-              h_seat[r_row][r_col]=i;
-            printf("%d %d\n",r_row,r_col);
-        }
-      else
+      h_P[i].x=r_row;
+      h_P[i].y=r_col;
+      // h_P[i].coordinateX = h_P[i].x;
+      //h_P[i].coordinateY = h_P[i].y;
+      if(r_row<0||r_col<0)
       {
-          i--;
-        }
+        printf("Olala\n");
+        return 0;
+      }
+      else
+        h_seat[r_row][r_col]=i;
+      printf("%d %d\n",r_row,r_col);
     }
-	return 1;
+    else
+    {
+      i--;
+    }
+  }
+  return 1;
 }
 
 //older people in the aisle and younger in the window side
+
+//TODO if there re more old people than the number of aisle seats then give them the second seat from aisle
 int seatArrangement2(Passenger *h_P, int h_seat[][100], int numPass){
+  printf("seatArrangement2\n");
+  for (int i = 0; i < 100; ++i)
+  {
+    printf("%d\n", h_P[i].age);
+  }
   int r_row,r_col,i = 0,j =0;
-      int oldPpl[100],youngPpl[100], k=0, l=0;
-      for (i = 0; i < numPass;++i)
+  int oldPpl[100],youngPpl[100], k=0, l=0;
+  for (i = 0; i < numPass;++i)
+  {
+    if (h_P[i].age > 40)
+    {
+      oldPpl[k] = i;
+      ++k;
+    }
+    else{
+      youngPpl[l] = i;
+      ++l;
+    }
+  }
+  printf("k+l = %d\n", k+l);
+  int m =0, n=0;
+  for(i=0;i<numPass;++i)
+  {
+    r_row=rand()%30;   //should be defined in the header file TODO
+    r_col=rand()%6;     //should be defined in the header file TODO
+    if(h_seat[r_row][r_col]==-1)
+    {
+      if(r_row<0||r_col<0)
       {
-        if (h_P[i].age > 40)
-        {
-          oldPpl[k] = i;
-          ++k;
-        }
-        else{
-          youngPpl[l] = i;
-          ++l;
-        }
+        printf("negative row column not allowed\n");
+        break;
       }
-      int m =0, n=0;
-      for (i = 0; i < 30; ++i)
+      else if ((r_col == 2 || r_col == 3) && n<k)
       {
-        for (j = 0; j < 6; ++j)
-        {
-          if (j%2 !=0 || j%3 == 0)
-          {
-            if(m<l)
-            {
-              h_P[youngPpl[m]].x = i;
-              h_P[youngPpl[m]].y = j;
-              h_seat[i][j] = youngPpl[m];
-              ++m;
-            }
-          }
-          else{
-            if(n<k)
-            {
-              h_P[oldPpl[n]].x = i;
-              h_P[oldPpl[n]].y = j;
-              h_seat[i][j] = oldPpl[n];
-              ++n;
-            }
-          }
-        }
+        h_P[oldPpl[n]].x = r_row;
+        h_P[oldPpl[n]].y = r_col;
+        h_seat[r_row][r_col] = oldPpl[n];
+        ++n;
+      }
+      else if (m<l)
+      {
+        h_P[youngPpl[m]].x = r_row;
+        h_P[youngPpl[m]].y = r_col;
+        h_seat[r_row][r_col] = youngPpl[m];
+        ++m;
+      }
+      printf("seated pass i = %d\n", i);
+    }
+    else
+      i--;
+  }
+  for (int i = 0; i < 30; ++i)
+  {
+    for (int j = 0; j < 6; ++j)
+    {
+      if (h_seat[i][j]==-1 && n<k)
+      {
+        h_P[oldPpl[n]].x = i;
+        h_P[oldPpl[n]].y = j;
+        h_seat[i][j] = oldPpl[m];
+        ++n;
       }
     }
+  }
+  printf("m young= %d\n", m);
+  printf("l young= %d\n", l);
+  printf("n  old= %d\n", n);
+  printf("k old= %d\n", k);
+  
+  
+  for (int i = 0; i < 30; ++i)
+  {
+    for (int j = 0; j < 6; ++j)
+    {
+      printf("(%d)\t\t", h_P[h_seat[i][j]].age);
+    }
+    printf("\n");
+  }
   return 1;
 }
 
 //younger people in the ailse and older in the window side
 int seatArrangement3(Passenger *h_P, int h_seat[][100], int numPass){
-int r_row,r_col,i = 0,j =0;
-      int oldPpl[100],youngPpl[100], k=0, l = 0;
-      for (i = 0; i < numPass;++i)
+  printf("seatArrangement3\n");
+  for (int i = 0; i < 100; ++i)
+  {
+    printf("%d\n", h_P[i].age);
+  }
+  int r_row,r_col,i = 0,j =0;
+  int oldPpl[100],youngPpl[100], k=0, l=0;
+  for (i = 0; i < numPass;++i)
+  {
+    if (h_P[i].age > 40)
+    {
+      oldPpl[k] = i;
+      ++k;
+    }
+    else{
+      youngPpl[l] = i;
+      ++l;
+    }
+  }
+  printf("k+l = %d\n", k+l);
+  int m =0, n=0;
+  for(i=0;i<numPass;++i)
+  {
+    r_row=rand()%30;   //should be defined in the header file TODO
+    r_col=rand()%6;     //should be defined in the header file TODO
+    if(h_seat[r_row][r_col]==-1)
+    {
+      if(r_row<0||r_col<0)
       {
-        if (h_P[i].age > 40)
-        {
-          oldPpl[k] = i;
-          ++k;
-        }
-        else{
-          youngPpl[l] = i;
-          ++l;
-        }
+        printf("negative row column not allowed\n");
+        break;
       }
-      int m = 0, n=0;
-      for (i = 0; i < 30; ++i)
+      else if ((r_col == 2 || r_col == 3) && m<l)
       {
-        for (j = 0; j < 6; ++j)
-        {
-          if (j%2 !=0 || j%3 == 0)
-          {
-            if(m<k)
-            {
-              h_P[oldPpl[m]].x = i;
-              h_P[oldPpl[m]].y = j;
-              h_seat[i][j] = oldPpl[m];
-              ++m;
-            }
-          }
-          else{
-            if(n<l)
-            h_P[youngPpl[n]].x = i;
-            h_P[youngPpl[n]].y = j;
-            h_seat[i][j] = youngPpl[n];
-            ++n;
-          }
-        }
+        h_P[youngPpl[m]].x = r_row;
+        h_P[youngPpl[m]].y = r_col;
+        h_seat[r_row][r_col] = youngPpl[m];
+        ++m;
+      }
+      else if (n<k)
+      {
+        h_P[oldPpl[n]].x = r_row;
+        h_P[oldPpl[n]].y = r_col;
+        h_seat[r_row][r_col] = oldPpl[n];
+        ++n;
+      }
+      printf("seated pass i = %d\n", i);
+    }
+    else
+      i--;
+  }
+  for (int i = 0; i < 30; ++i)
+  {
+    for (int j = 0; j < 6; ++j)
+    {
+      if (h_seat[i][j]==-1 && m<l)
+      {
+        h_P[youngPpl[m]].x = r_row;
+        h_P[youngPpl[m]].y = r_col;
+        h_seat[r_row][r_col] = youngPpl[m];
+        ++m;
       }
     }
+  }
+  printf("m young= %d\n", m);
+  printf("l young= %d\n", l);
+  printf("n  old= %d\n", n);
+  printf("k old= %d\n", k);
+  
+  
+  for (int i = 0; i < 30; ++i)
+  {
+    for (int j = 0; j < 6; ++j)
+    {
+      printf("(%d)\t\t", h_P[h_seat[i][j]].age);
+    }
+    printf("\n");
+  }
   return 1;
 }
 
 // women in one half and men in second half
 int seatArrangement4(Passenger *h_P, int h_seat[][100], int numPass){
-  int r_row,r_col,i = 0,j =0;
-      int women[100], men[100], k=0, l = 0;
-      for (i = 0; i < numPass;++i)
+  printf("testing seatArrangement4\n");
+  int r_row = 0,r_col = 0,i = 0,j =0;
+  int women[100], men[100], k=0, l = 0;
+  for (i = 0; i < numPass;++i)
+  {
+    if (h_P[i].sex == 1)
+    {
+      women[k] = i;
+      ++k;
+    }
+    else{
+      men[l] = i;
+      ++l;
+    }
+  }
+  // printf("testing seatArrangement41\n");
+  
+  for(i=0;i<k;++i)
+  {
+    r_row=randomfunc(0,14);
+    r_col=randomfunc(0,5);
+    if(h_seat[r_row][r_col]==-1)
+    {
+      if(r_row<0 || r_col<0)
       {
-        if (h_P[i].sex == 0)
+        printf("Olala\n");
+        break;
+      }
+      else{
+        h_P[women[i]].x=r_row;
+        h_P[women[i]].y=r_col;
+        h_seat[r_row][r_col]=women[i];
+      }
+    }
+    //printf("%d %d\n",r_row,r_col);
+    else
+    {
+      i--;
+    }
+  }
+  // printf("testing seatArrangement42\n");
+  
+  for(i=0;i<l;++i)
+  {
+    r_row=randomfunc(15,29);
+    r_col=randomfunc(0,5);
+    printf("r_row : %d\n", r_row);
+    printf("r_col : %d\n", r_col);
+    
+    //printf("h_seat[r_row][r_col]: %d\n", h_seat[r_row][r_col]);
+    if(h_seat[r_row][r_col]==-1)
+    {
+      //    printf("testing seatArrangement43\n");
+      if(r_row<0 || r_col<0)
+      {
+        printf("Olala\n");
+        break;
+      }
+      else{
+        h_P[men[i]].x=r_row;
+        h_P[men[i]].y=r_col;
+        h_seat[r_row][r_col]=men[i];
+      }
+    }
+    //printf("%d %d\n",r_row,r_col);
+    else
+    {
+      printf("testing seatArrangement44\n");
+      i--;
+    }
+  }
+  
+  printf("male: %d\n", l);
+  printf("female: %d\n", k);
+  
+  
+  for (int i = 0; i < 30; ++i)
+  {
+    for (int j = 0; j < 6; ++j)
+    {
+      if (h_seat[i][j]!=-1)
+      {
+        if (h_P[h_seat[i][j]].sex == 0)
         {
-          women[k] = i;
-          ++k;
+          printf("m \t\t");
         }
-        else{
-          men[l] = i;
-          ++l;
+        else if (h_P[h_seat[i][j]].sex == 1)
+        {
+          printf("f \t\t");
         }
       }
-
-    for(i=0;i<k;++i)
-    {
-      r_row=rand()%15;
-      r_col=rand()%6;
-      if(h_seat[r_row][r_col]==-1)
-        {
-            h_P[women[i]].x=r_row;
-            h_P[women[i]].y=r_col;
-            if(r_row<0||r_col<0)
-              {
-                printf("Olala\n");
-                return 0;
-              }
-            else
-              h_seat[r_row][r_col]=i;
-            //printf("%d %d\n",r_row,r_col);
-        }
-      else
-      {
-          i--;
-        }
+      else{
+        printf(" \t");
+      }
     }
-
-    for(i=0;i<l;++i)
-    {
-      r_row=(rand()%15) + 15;
-      r_col=rand()%6;
-      if(h_seat[r_row][r_col]==-1)
-        {
-            h_P[men[i]].x=r_row;
-            h_P[men[i]].y=r_col;
-            if(r_row<0||r_col<0)
-              {
-                printf("Olala\n");
-                return 0;
-              }
-            else
-              h_seat[r_row][r_col]=i;
-            //printf("%d %d\n",r_row,r_col);
-        }
-      else
-      {
-          i--;
-        }
-    }
-return 1;
+    printf("\n");
+  }
+  
+  return 1;
 }
 
   //Main
@@ -1097,45 +1323,66 @@ fprintf(fp,"\n ----------------------------- \n");
   }
 
 
-  int random(int min,int max);
 
-  void pass_input(Passenger *P,int n)
+void pass_input(Passenger *P,int n)
+{
+  int i;//r;
+  srand(time(0));
+  Passenger *tp=P;
+  
+  for(i=0;i<n;++i,tp++)
   {
-    int i;//r;
-    srand(time(0));
-    Passenger *tp=P;
-
-    for(i=0;i<n;++i,tp++)
-      {
-        //r=rand();
-        //  printf("%d\n",r);
-        tp->id=i;
-        //  tp->x=
-        //
-        tp->sex=random(0,1); // Male or female(random 0-1)
-        tp->status = 0;
-        tp->Mtime=tp->sex?random(1000,1750):random(1100,1950);
-        tp->Wtime=50;
-        tp->Rtime=random(400,700); // Random  (500-1000)ms
-        tp->fear=-1; //fear value 0
-        tp->agility=-1; // agility value
-
-        tp->diameter=7;  //random(8,10);//(Random ) // diameter occupied by passenger
-        tp->totaltime=0; //total time to evacuate
-        tp->totalDist=0; //total distance to exit
-        
-	if(tp->sex==0)
-         tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
-        else
-          tp->speed=1.0f;
-
-        tp->grpstatus=-1; // Not in this paper in group or not
-        tp->timeSteps=178; // minimum unit of time = 178 miliseconds
-        tp->res=0;
-        printf("id : %d , sex : %d , Mtime : %d, Rtime : %d\n",tp->id,tp->sex,tp->Mtime,tp->Rtime);
-      }
-
+    tp->id=i;
+    tp->sex=randomfunc(0,1); // Male or female(random 0-1)
+    tp->status = 0;
+    tp->Mtime=tp->sex?randomfunc(1000,1750):randomfunc(1100,1950);
+    tp->Wtime=50;
+    tp->Rtime=randomfunc(400,700); // Random  (500-1000)ms
+    tp->fear=-1; //fear value 0
+    tp->agility=-1; // agility value
+    
+    tp->age = randomfunc(20,70);
+    tp->diameter=7;  //randomfunc(8,10);//(Random ) // diameter occupied by passenger
+    tp->totaltime=0; //total time to evacuate
+    tp->totalDist=0; //total distance to exit
+    
+    if(tp->sex==0)
+    tp->speed=1.5f;  //Random (1-1.5 ) speed of passenger
+    else
+      tp->speed=1.0f;
+    
+    //setspeed(tp);    //setting speed according to the age
+    tp->grpstatus=-1; // Not in this paper in group or not
+    tp->timeSteps=178; // minimum unit of time = 178 miliseconds
+    tp->res=0;
+    // printf("id : %d , sex : %d , Mtime : %d, Rtime : %d\n",tp->id,tp->sex,tp->Mtime,tp->Rtime);
+    //printf("age: %d \n", tp->age);
   }
+}
+
+void setspeed(Passenger *tp){
+  if(tp->age > 20 && tp->age < 40){
+    if(tp->sex==0)
+    tp->speed=2.0f;
+    else
+      tp->speed=1.5f;
+  }
+  
+  if(tp->age > 40 && tp->age < 50){
+    if(tp->sex==0)
+    tp->speed=1.5f;
+    else
+      tp->speed=1.0f;
+  }
+  
+  if(tp->age > 50 && tp->age < 70){
+    if(tp->sex==0)
+    tp->speed=1.0f;
+    else
+      tp->speed=0.5f;
+  }
+}
+
 
 
 Aircraft aircraftInput(char name[]){
